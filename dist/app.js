@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -95,11 +95,11 @@ module.exports = g;
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
-var normalizeComponent = __webpack_require__(10)
+var normalizeComponent = __webpack_require__(2)
 /* script */
 var __vue_script__ = __webpack_require__(11)
 /* template */
-var __vue_template__ = __webpack_require__(12)
+var __vue_template__ = __webpack_require__(15)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -140,22 +140,131 @@ module.exports = Component.exports
 
 /***/ }),
 /* 2 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-__webpack_require__(3);
-module.exports = __webpack_require__(13);
+/* globals __VUE_SSR_CONTEXT__ */
+
+// IMPORTANT: Do NOT use ES2015 features in this file.
+// This module is a runtime utility for cleaner component module output and will
+// be included in the final webpack user bundle.
+
+module.exports = function normalizeComponent (
+  rawScriptExports,
+  compiledTemplate,
+  functionalTemplate,
+  injectStyles,
+  scopeId,
+  moduleIdentifier /* server only */
+) {
+  var esModule
+  var scriptExports = rawScriptExports = rawScriptExports || {}
+
+  // ES6 modules interop
+  var type = typeof rawScriptExports.default
+  if (type === 'object' || type === 'function') {
+    esModule = rawScriptExports
+    scriptExports = rawScriptExports.default
+  }
+
+  // Vue.extend constructor export interop
+  var options = typeof scriptExports === 'function'
+    ? scriptExports.options
+    : scriptExports
+
+  // render functions
+  if (compiledTemplate) {
+    options.render = compiledTemplate.render
+    options.staticRenderFns = compiledTemplate.staticRenderFns
+    options._compiled = true
+  }
+
+  // functional template
+  if (functionalTemplate) {
+    options.functional = true
+  }
+
+  // scopedId
+  if (scopeId) {
+    options._scopeId = scopeId
+  }
+
+  var hook
+  if (moduleIdentifier) { // server build
+    hook = function (context) {
+      // 2.3 injection
+      context =
+        context || // cached call
+        (this.$vnode && this.$vnode.ssrContext) || // stateful
+        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
+      // 2.2 with runInNewContext: true
+      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__
+      }
+      // inject component styles
+      if (injectStyles) {
+        injectStyles.call(this, context)
+      }
+      // register component module identifier for async chunk inferrence
+      if (context && context._registeredComponents) {
+        context._registeredComponents.add(moduleIdentifier)
+      }
+    }
+    // used by ssr in case component is cached and beforeCreate
+    // never gets called
+    options._ssrRegister = hook
+  } else if (injectStyles) {
+    hook = injectStyles
+  }
+
+  if (hook) {
+    var functional = options.functional
+    var existing = functional
+      ? options.render
+      : options.beforeCreate
+
+    if (!functional) {
+      // inject component registration as beforeCreate hook
+      options.beforeCreate = existing
+        ? [].concat(existing, hook)
+        : [hook]
+    } else {
+      // for template-only hot-reload because in that case the render fn doesn't
+      // go through the normalizer
+      options._injectStyles = hook
+      // register for functioal component in vue file
+      options.render = function renderWithStyleInjection (h, context) {
+        hook.call(context)
+        return existing(h, context)
+      }
+    }
+  }
+
+  return {
+    esModule: esModule,
+    exports: scriptExports,
+    options: options
+  }
+}
 
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(4);
+module.exports = __webpack_require__(16);
+
+
+/***/ }),
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_vue__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue_router__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__routes__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue_router__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__routes__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Pages_App_vue__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Pages_App_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3__Pages_App_vue__);
 
@@ -176,7 +285,7 @@ var app = new __WEBPACK_IMPORTED_MODULE_0_vue___default.a({
 });
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10837,10 +10946,10 @@ Vue$3.compile = compileToFunctions;
 
 module.exports = Vue$3;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(5).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(6).setImmediate))
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var apply = Function.prototype.apply;
@@ -10893,13 +11002,13 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(6);
+__webpack_require__(7);
 exports.setImmediate = setImmediate;
 exports.clearImmediate = clearImmediate;
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -11089,10 +11198,10 @@ exports.clearImmediate = clearImmediate;
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(7)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(8)))
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -11282,7 +11391,7 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13912,7 +14021,7 @@ if (inBrowser && window.Vue) {
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13928,144 +14037,46 @@ if (inBrowser && window.Vue) {
 ]);
 
 /***/ }),
-/* 10 */
-/***/ (function(module, exports) {
-
-/* globals __VUE_SSR_CONTEXT__ */
-
-// IMPORTANT: Do NOT use ES2015 features in this file.
-// This module is a runtime utility for cleaner component module output and will
-// be included in the final webpack user bundle.
-
-module.exports = function normalizeComponent (
-  rawScriptExports,
-  compiledTemplate,
-  functionalTemplate,
-  injectStyles,
-  scopeId,
-  moduleIdentifier /* server only */
-) {
-  var esModule
-  var scriptExports = rawScriptExports = rawScriptExports || {}
-
-  // ES6 modules interop
-  var type = typeof rawScriptExports.default
-  if (type === 'object' || type === 'function') {
-    esModule = rawScriptExports
-    scriptExports = rawScriptExports.default
-  }
-
-  // Vue.extend constructor export interop
-  var options = typeof scriptExports === 'function'
-    ? scriptExports.options
-    : scriptExports
-
-  // render functions
-  if (compiledTemplate) {
-    options.render = compiledTemplate.render
-    options.staticRenderFns = compiledTemplate.staticRenderFns
-    options._compiled = true
-  }
-
-  // functional template
-  if (functionalTemplate) {
-    options.functional = true
-  }
-
-  // scopedId
-  if (scopeId) {
-    options._scopeId = scopeId
-  }
-
-  var hook
-  if (moduleIdentifier) { // server build
-    hook = function (context) {
-      // 2.3 injection
-      context =
-        context || // cached call
-        (this.$vnode && this.$vnode.ssrContext) || // stateful
-        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
-      // 2.2 with runInNewContext: true
-      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
-        context = __VUE_SSR_CONTEXT__
-      }
-      // inject component styles
-      if (injectStyles) {
-        injectStyles.call(this, context)
-      }
-      // register component module identifier for async chunk inferrence
-      if (context && context._registeredComponents) {
-        context._registeredComponents.add(moduleIdentifier)
-      }
-    }
-    // used by ssr in case component is cached and beforeCreate
-    // never gets called
-    options._ssrRegister = hook
-  } else if (injectStyles) {
-    hook = injectStyles
-  }
-
-  if (hook) {
-    var functional = options.functional
-    var existing = functional
-      ? options.render
-      : options.beforeCreate
-
-    if (!functional) {
-      // inject component registration as beforeCreate hook
-      options.beforeCreate = existing
-        ? [].concat(existing, hook)
-        : [hook]
-    } else {
-      // for template-only hot-reload because in that case the render fn doesn't
-      // go through the normalizer
-      options._injectStyles = hook
-      // register for functioal component in vue file
-      options.render = function renderWithStyleInjection (h, context) {
-        hook.call(context)
-        return existing(h, context)
-      }
-    }
-  }
-
-  return {
-    esModule: esModule,
-    exports: scriptExports,
-    options: options
-  }
-}
-
-
-/***/ }),
 /* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Components_Generator_vue__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Components_Generator_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__Components_Generator_vue__);
 //
 //
 //
 //
 //
 //
+
+
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: 'App',
   data: function data() {
     return {};
   },
-  mounted: function mounted() {}
+  mounted: function mounted() {},
+
+  components: {
+    Generator: __WEBPACK_IMPORTED_MODULE_0__Components_Generator_vue___default.a
+  }
 });
 
 /***/ }),
-/* 12 */
+/* 12 */,
+/* 13 */,
+/* 14 */,
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", { staticClass: "container" }, [_vm._v("\n  App\n")])
+  return _c("div", { staticClass: "container" }, [_c("generator")], 1)
 }
 var staticRenderFns = []
 render._withStripped = true
@@ -14078,10 +14089,137 @@ if (false) {
 }
 
 /***/ }),
-/* 13 */
+/* 16 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 17 */,
+/* 18 */,
+/* 19 */,
+/* 20 */,
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+var normalizeComponent = __webpack_require__(2)
+/* script */
+var __vue_script__ = __webpack_require__(22)
+/* template */
+var __vue_template__ = __webpack_require__(23)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = null
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "src/js/Components/Generator.vue"
+if (Component.esModule && Object.keys(Component.esModule).some(function (key) {  return key !== "default" && key.substr(0, 2) !== "__"})) {  console.error("named exports are not supported in *.vue files.")}
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-89d33b52", Component.options)
+  } else {
+    hotAPI.reload("data-v-89d33b52", Component.options)
+' + '  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 22 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: 'Generator',
+  data: function data() {
+    return {
+      output: [],
+      usefullWords: [],
+      combos: {
+        3: ['adjektiver', 'navneord', 'udsagnsord'],
+        4: ['adjektiver', 'navneord', 'udsagnsord', 'navneord2'],
+        5: ['adjektiver', 'navneord', 'udsagnsord', 'adjektiver2', 'navneord2']
+      },
+      wordLists: {
+        'adjektiver': ['afhængig', 'aktiv', 'almindelig', 'alvorlig', 'anderledes', 'bange', 'berømt', 'bestemt', 'billig', 'blød', 'chauvinistisk', 'chik', 'cirkelrund', 'citrongul', 'cool', 'dårlig', 'dejlig', 'demokratisk', 'dyr', 'dårlig', 'effektiv', 'enkel', 'enorm', 'europæisk', 'evig', 'fantastisk', 'fast', 'fattig', 'flot', 'forkert', 'frisk', 'gal', 'glad', 'gratis', 'grov', 'grundig', 'halv', 'hellig', 'hurtig', 'hård', 'historisk', 'ildrød', 'interessant', 'indfødt', 'infernalsk', 'ivrig', 'japansk', 'jaloux', 'jomfruelig', 'jysk', 'jægergrøn', 'kendt', 'klar', 'klassisk', 'klog', 'kulturel', 'langsom', 'lav', 'let', 'lille', 'lykkelig', 'mager', 'menneskelig', 'moderne', 'mærkelig', 'mørk', 'naturlig', 'norsk', 'nordisk', 'normal', 'ny', 'offentlig', 'ond', 'opmærksom', 'oprindelig', 'ordentlig', 'panisk', 'passiv', 'pervers', 'pigeglad', 'pestramt', 'queer', 'radikal', 'rar', 'ren', 'rig', 'rolig', 'seksuel', 'sjov', 'smuk', 'slem', 'syg', 'talblind', 'tigerstribet', 'tilfreds', 'torskedum', 'tung', 'ukendt', 'umiddelbar', 'umulig', 'ung', 'utrolig', 'varm', 'venlig', 'vestlig', 'vanskelig', 'voldsom', 'webbaseret', 'xenofobisk', 'yderlig', 'ynkelig', 'zulunesisk', 'ædru', 'ægte', 'ængstelig', 'ærlig', 'ærmeløs', 'ødelagt', 'ømtålelig', 'ønskværdig', 'østasiatisk', 'østjysk', 'åndeløs', 'årvågen'],
+        'navneord': ['abe', 'abrikos', 'adelsdame', 'admiral', 'appelsin', 'barn', 'blender', 'blomst', 'bog', 'brevvægt', 'callgirl', 'campist', 'cement', 'censor', 'charmør', 'daddel', 'danser', 'datter', 'doktor', 'dybfryser', 'emballage', 'edderkop', 'egern', 'eksaminator', 'elorgel', 'fjerkræ', 'fjernsyn', 'flyttemappe', 'frimærke', 'frugt', 'føl', 'gaffel', 'gardin', 'girokort', 'glas', 'gris', 'hane', 'hest', 'hund', 'hundehvalp', 'hvidløg', 'ibis', 'idealist', 'idiot', 'idol', 'indpisker', 'jagerfly', 'jazzband', 'jernlady', 'jordbunke', 'julegås', 'kagedåse', 'kartoffel', 'kat', 'kaffedåse', 'kedel', 'lampe', 'landdyr', 'lænestol', 'løg', 'langelænder', 'mad', 'mand', 'mink', 'mikrobølgeovn', 'mælk', 'nabokone', 'nar', 'naturelsker', 'netdater', 'nonne', 'officer', 'ogginok', 'oldsag', 'oksekød', 'oligark', 'pacifist', 'pakhest', 'panser', 'portner', 'postbud', 'quizmaster', 'rabbiner', 'racekat', 'racekører', 'radiovært', 'revolvermand', 'sabotør', 'sabelsluger', 'sagnkonge', 'sanger', 'saxofonist', 'taktiker', 'talent', 'teknokrat', 'teoritiker', 'tyr', 'ubryder', 'udlejer', 'udlænding', 'udstiller', 'ulvehund', 'vaffel', 'vagabond', 'vagt', 'vampyr', 'verdensborger', 'wannabe', 'xylofon', 'yuppie', 'yeti', 'zebra', 'ædedolk', 'ægtefælle', 'ældreråd', 'æresborger', 'ærkebisp', 'økolog', 'økonom', 'øksemorder', 'øldrikker', 'ørelæge', 'ågerkarl', 'ånd'],
+        'udsagnsord': ['advarer', 'afbryder', 'afkræver', 'afslører', 'angriber', 'bader', 'bagtaler', 'banker', 'beføler', 'begærer', 'camouflerer', 'charmerer', 'chokerer', 'citerer', 'censurerer', 'dasker', 'dater', 'driller', 'dræber', 'dunker', 'efteraber', 'ejer', 'elsker', 'endevender', 'erstatter', 'fanger', 'farserer', 'flår', 'flænser', 'frister', 'forhekser', 'gennempløjer', 'gokker', 'gratulerer', 'guffer', 'griller', 'headhunter', 'halshugger', 'hapser', 'humper', 'hypnotiserer', 'imiterer', 'indlogerer', 'indånder', 'indgnider', 'invaliderer', 'jagter', 'jerner', 'jonglerer', 'justerer', 'jævner', 'kanøfler', 'klasker', 'karseklipper', 'kærtegner', 'kølhaler', 'lammetæver', 'lemlæster', 'ledsager', 'lufter', 'lugter', 'maler', 'masserer', 'modtager', 'møder', 'mørbanker', 'narrer', 'nedkøler', 'nedskyder', 'nusser', 'nævner', 'ombygger', 'omringer', 'opildner', 'opsuger', 'oversmører', 'pantsætter', 'passer', 'pimper', 'pirker', 'pynter', 'quizzer', 'rapper', 'redder', 'renser', 'rister', 'ryger', 'ser', 'slår', 'spiser', 'stormer', 'sælger', 'taber', 'tager', 'takker', 'tegner', 'tipper', 'udfordrer', 'udbener', 'udnytter', 'udstøder', 'undergraver', 'vandaliserer', 'vejer', 'vejleder', 'visiterer', 'vugger', 'windsurfer', 'xerograferer', 'yngler', 'ynker', 'zapper', 'æder', 'ælter', 'ændrer', 'ærer', 'ætser', 'ødelægger', 'ødsler', 'øjner', 'ønsker', 'øver', 'åbner', 'årelader'],
+        'adjektiver2': ['abnorm', 'adræt', 'akademisk', 'anspændt', 'arrig', 'barmfager', 'barnlig', 'beskidt', 'bitchy', 'bovlam', 'catalansk', 'champagnefarvet', 'chokoladebrun', 'civil', 'cylindrisk', 'damet', 'deform', 'dekadent', 'dramatisk', 'dybsinding', 'eftertænksom', 'eksotisk', 'emsig', 'erfaren', 'excentrisk', 'faglært', 'famøs', 'fed', 'feminin', 'fjendtlig', 'forfalden', 'gammel', 'gavmild', 'glat', 'glohed', 'grusom', 'hadfyldt', 'havesyg', 'herredum', 'hårfager', 'hævnlysten', 'ihærdig', 'imbecil', 'inkompetent', 'iskold', 'intetsigende', 'jadegrøn', 'jusuitisk', 'jordfarvet', 'jordskælvsramt', 'julet', 'kamplysten', 'kanonflot', 'kappeklædt', 'klarsynet', 'knotten', 'laber', 'lasket', 'lattermild', 'liderlig', 'lummer', 'mandlig', 'mathvid', 'melankolsk', 'mellemblond', 'mindeværdig', 'naiv', 'naturinteresseret', 'negativ', 'nidkær', 'nuttet', 'obskur', 'oldgræsk', 'opstemt', 'overlegen', 'overvægtig', 'paternalistisk', 'papirtynd', 'parringslysten', 'pilrådden', 'plaskvåd', 'queer', 'rask', 'rasende', 'revolutionær', 'rumlig', 'røvsyg', 'saftig', 'sart', 'selvdød', 'sjælden', 'skamfuld', 'talentløs', 'tiliset', 'tiptop', 'turistet', 'tørstig', 'udenlandsk', 'udmærket', 'usædvanlig', 'ubehagelig', 'usexet', 'vild', 'vis', 'voksen', 'vred', 'væsentlig', 'westernagtig', 'xylografisk', 'ypperlig', 'yppig', 'zigzagget', 'æblegrøn', 'ærgerlig', 'ældrevenlig', 'ærkedum', 'ærværdig', 'økumenisk', 'østberlinsk', 'østerlandsk', 'østlig', 'øvet', 'åndsformørket', 'århusiansk'],
+        'navneord2': ['afløser', 'agent', 'akrobat', 'anus', 'arier', 'babs', 'bagmand', 'ballon', 'barbar', 'bigamist', 'cafégæst', 'cancanpige', 'centralafrikaner', 'champagne', 'culottesteg', 'dagpengemodtager', 'dalmatiner', 'damesko', 'denimjakke', 'direktør', 'ekskone', 'elektriker', 'elev', 'elskovsrede', 'etnolog', 'fadøl', 'familie', 'fanden', 'filet', 'fimrehår', 'firmabil', 'gryde', 'gorilla', 'grøntsag', 'gulerod', 'gård', 'hacker', 'haj', 'herrecykel', 'hjørnesofa', 'høne', 'indvandrer', 'inspektør', 'intimmassageklinik', 'isfugl', 'iværksætter', 'jakkemand', 'jernhest', 'jurist', 'jærv', 'jøde', 'ko', 'konvolut', 'kvinde', 'kylling', 'køleskab', 'labyrint', 'laksefisker', 'landkrabbe', 'landsbytosse', 'lasagne', 'machotype', 'madmor', 'majroe', 'missekat', 'morbror', 'narkoselæge', 'natble', 'nordjyde', 'nougat', 'næbdyr', 'oase', 'odder', 'optiker', 'olietanker', 'organ', 'panda', 'pangfarve', 'papsøn', 'pariserbøf', 'pygmæ', 'qatar', 'ridefoged', 'roligan', 'rosenbusk', 'rudekuvert', 'røremaskine', 'sandbanke', 'student', 'superstjerne', 'syvsover', 'sølvræv', 'testpilot', 'tigerhaj', 'tilskuer', 'tissemyre', 'torso', 'ubåd', 'ufo', 'ukulele', 'undermåler', 'urokse', 'veteran', 'vidunderbarn', 'voldsmand', 'vovehals', 'vårflue', 'weekendafløser', 'xenon', 'yogi', 'ymerdrys', 'zombie', 'æseldriver', 'æstetiker', 'æblekage', 'ægtebarn', 'ægtemand', 'ørebrusk', 'øfgris', 'øgle', 'ønskebarn', 'ørnenæse', 'ålefisk', 'ådselsbille']
+      }
+    };
+  },
+  mounted: function mounted() {
+    var word = 'testord'.substr(0, 5).split('');
+    var program = [];
+    for (var i = 0; i < word.length; ++i) {
+      var usefullWords = [];
+      var wordClass = this.combos[word.length][i];
+      for (var counter = 0; counter < this.wordLists[wordClass].length; ++counter) {
+        if (this.wordLists[wordClass][counter][0] === word[i].toLowerCase()) {
+          usefullWords.push(this.wordLists[wordClass][counter]);
+        }
+      }
+
+      usefullWords.sort(function () {
+        return .5 - Math.random();
+      });
+      program.push(usefullWords[0]);
+    }
+    this.output.push(program.join(' '));
+    console.log(program.join(' '));
+  }
+});
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "container" }, [_vm._v("\n  test\n")])
+}
+var staticRenderFns = []
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-89d33b52", module.exports)
+  }
+}
 
 /***/ })
 /******/ ]);

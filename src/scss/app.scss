@@ -1,0 +1,32 @@
+// 1. Import the initial variables
+@import "~bulma/sass/utilities/initial-variables";
+@import "~bulma/sass/utilities/functions";
+
+
+@import url('https://fonts.googleapis.com/css?family=Patrick+Hand');
+
+html, body {
+	font-family: 'Patrick Hand', cursive;
+	font-size: 10px;
+}
+
+#program-overview {
+	font-size: 3rem;
+	display: block;
+    background: #FEC52E;
+    height: 80vh;
+    color: #482004;
+    padding: 4rem;
+
+    ul {
+    	list-style: none;
+    	padding: 0;
+    	margin: 0;
+
+    	li {
+    		margin-bottom: 2rem;
+    	}
+    }
+}
+
+@import "~bulma";

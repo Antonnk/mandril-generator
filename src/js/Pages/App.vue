@@ -1,10 +1,12 @@
 <template>
   <div class="container">
-    App
+    <generator></generator>
   </div>
 </template>
 
 <script>
+  import Generator from '../Components/Generator.vue'
+
   export default {
     name: 'App',
     data () {
@@ -12,6 +14,9 @@
       }
     },
     mounted() {
+    },
+    components : {
+      Generator
     }
   }
 </script>
