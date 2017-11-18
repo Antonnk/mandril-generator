@@ -1,5 +1,4 @@
 <template>
-  <div class="container">
     <div id="program-overview">
       <ul>
         <li v-for="entry in output">
@@ -7,12 +6,12 @@
         </li>
       </ul>
     </div>
-  </div>
 </template>
 
 <script>
   export default {
     name: 'Generator',
+    props : ['seed'],
     data () {
       return {
         output : [],
@@ -57,10 +56,10 @@
       }
     },
     mounted() {
-      this.addEntry('aklsdkajsd');
-      this.addEntry('ælpofd');
-      this.addEntry('mcxmcxc');
-      this.addEntry('ithcsd');
+      this.addEntry(this.seed);
+      this.addEntry(this.seed);
+      this.addEntry(this.seed);
+      this.addEntry(this.seed);
     }
   }
 </script>

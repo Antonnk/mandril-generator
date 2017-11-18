@@ -5,18 +5,14 @@
 
 @import url('https://fonts.googleapis.com/css?family=Patrick+Hand');
 
-html, body {
-	font-family: 'Patrick Hand', cursive;
-	font-size: 10px;
-}
-
 #program-overview {
-	font-size: 3rem;
+	font-family: 'Patrick Hand', cursive;
+	font-size: 2rem;
 	display: block;
     background: #FEC52E;
     height: 80vh;
     color: #482004;
-    padding: 4rem;
+    padding: 1.5rem 3rem;
 
     ul {
     	list-style: none;
